@@ -1,21 +1,15 @@
 #pragma once
-#include <vector>
+
+#include "DetectionResult.h"
 #include "../Model/AudioFile.h"
+#include <vector>
 
-namespace EchoDup::Core {
-
-struct MatchResult
+namespace EchoDup::Core
 {
-    AudioFile first;
-    AudioFile second;
-    double similarity{};
-};
-
 class DuplicateDetector
 {
 public:
-    std::vector<MatchResult> Scan(
+    std::vector<DetectionResult> Scan(
         const std::vector<AudioFile>& files);
 };
-
 }
