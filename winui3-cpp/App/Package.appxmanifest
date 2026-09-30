@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Package xmlns="http://schemas.microsoft.com/appx/manifest/foundation/windows10">
+  <Identity Name="EchoDup.WinUI3" Publisher="CN=EchoDup" Version="1.0.0.0" />
+  <Properties>
+    <DisplayName>EchoDup</DisplayName>
+    <PublisherDisplayName>EchoDup</PublisherDisplayName>
+  </Properties>
+</Package>
