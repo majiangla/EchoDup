@@ -1,0 +1,7 @@
+<Project>
+  <PropertyGroup>
+    <LanguageStandard>stdcpp20</LanguageStandard>
+    <PlatformTarget>x64</PlatformTarget>
+    <WarningLevel>Level4</WarningLevel>
+  </PropertyGroup>
+</Project>
