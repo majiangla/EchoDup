@@ -1,0 +1,11 @@
+<UserControl
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <Grid>
+        <StackPanel Orientation="Horizontal">
+            <Button Content="Play" />
+            <Button Content="Pause" />
+            <Slider Width="240" />
+        </StackPanel>
+    </Grid>
+</UserControl>
