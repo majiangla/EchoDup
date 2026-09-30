@@ -1,0 +1,64 @@
+[package]
+name = "echo_dup"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+slint = { version = "1.18", default-features = false, features = ["std", "backend-winit", "renderer-femtovg", "renderer-software", "compat-1-18"] }
+clap = { version = "4.5", features = ["derive"] }
+# 仅保留实际支持的格式：wav/mp3/flac/ogg/m4a(aac)/vorbis（去掉 adpcm/alac/mkv/mp1/mp2/aiff/caf）
+symphonia = { version = "0.5", default-features = false, features = ["aac", "flac", "isomp4", "mp3", "ogg", "pcm", "vorbis", "wav"] }
+rodio = { version = "0.20", default-features = false, features = ["symphonia-mp3", "symphonia-flac", "symphonia-wav", "symphonia-vorbis"] }
+cpal = "0.15"
+hound = "3.5"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+csv = "1.3"
+toml = "0.8"
+anyhow = "1"
+rfd = "0.14"
+rayon = "1"
+# 关闭 ct2rs 默认的 cuda-small-binary（用不到 CUDA）；CPU 后端用 ruy 替代 oneDNN(dnnl)，
+# 体积可从 ~133MB 降到 ~60MB（ASR 速度略降，仍在子进程中不卡 UI）
+ct2rs = { version = "0.10", default-features = false, features = ["whisper", "ruy", "disable-cpu-dispatch"] }
+once_cell = "1"
+num_cpus = "1"
+# 音频指纹提取（Wang/Shazam 风格 + Haitsma 声学指纹，AB 对确认用）
+audiofp = { version = "0.4", default-features = false }
+# 提示音（绿线）频谱 crest 检测 STFT
+rustfft = "6"
+windows = { version = "0.58", features = [
+    "implement",
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_System_Com",
+    "Win32_System_Com_StructuredStorage",
+    "Win32_System_DataExchange",
+    "Win32_System_Memory",
+    "Win32_System_Ole",
+    "Win32_System_SystemServices",
+    "Win32_UI_Shell",
+    "Win32_System_Console",
+    "Win32_System_Threading",
+    "Win32_UI_WindowsAndMessaging",
+] }
+windows-core = "0.58"
+timestretch = "0.15.0"
+slint_borderless_windows = { git = "https://github.com/Drew-Chase/slint_borderless_windows.git" }
+
+[profile.release]
+lto = true
+codegen-units = 1
+opt-level = 3
+panic = "abort"
+strip = true
+
+[build-dependencies]
+slint-build = "1.18"
+
+[profile.dev]
+opt-level = 1
+
+# 依赖库用较高优化（编译一次后缓存），明显加快分析/ASR，又不拖慢自身增量编译
+[profile.dev.package."*"]
+opt-level = 2

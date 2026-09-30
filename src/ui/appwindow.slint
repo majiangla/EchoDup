@@ -1,0 +1,1956 @@
+import { CheckBox, Slider, TextEdit, ScrollView, LineEdit, TabWidget, Palette, Button, SpinBox } from "std-widgets.slint";
+import { MyMenuBarItemBase, MyMenuFrameBase, MyMenuItemBase } from "my-menu.slint";
+
+// 深色/浅色切换开关（自定义标题栏最右侧）
+component ThemeSwitch inherits Rectangle {
+    in property <bool> dark: false;
+    callback toggled;
+    width: 34px;
+    height: 20px;
+    border-radius: self.height / 2;
+    background: root.dark ? #2b3038 : #bcd7f5;
+    TouchArea {
+        width: 100%;
+        height: 100%;
+        mouse-cursor: pointer;
+        clicked => { root.toggled(); }
+        Tooltip { text: @markdown("深色/浅色模式"); }
+    }
+    Rectangle {
+        x: root.dark ? (parent.width - 17px) : 2px;
+        y: 2px;
+        width: 16px;
+        height: 16px;
+        border-radius: 8px;
+        background: root.dark ? #ffd75e : #ffce08;
+    }
+}
+
+// 标题栏菜单按钮
+component MenuButton inherits Rectangle {
+    in property <string> label: "";
+    in property <bool> dark: false;
+    callback clicked;
+    width: 64px;
+    height: 34px;
+    border-radius: 4px;
+    background: touch.pressed ? (root.dark ? #39424f : #ccd4de) : touch.has-hover ? (root.dark ? #2b3340 : #dde3ea) : transparent;
+    touch := TouchArea {
+        width: 64px;
+        height: 34px;
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+    Text {
+        text: root.label;
+        color: root.dark ? #cbd5e1 : #3a4048;
+        font-size: 12px;
+        vertical-alignment: center;
+        horizontal-alignment: center;
+    }
+}
+
+// 倍速输入：SpinBox 样式（−/＋ 按钮 + 自绘 TextInput，无清除叉号），步长 0.1
+component SpeedSpinBox inherits Rectangle {
+    in property <float> value: 1.0;
+    in property <string> text: "1.0";
+    in property <bool> enabled: true;
+    in property <bool> dark: false;
+    callback edited(string);
+    callback accepted(string);
+    callback stepped(float);
+    height: 30px;
+    width: 100px;
+    HorizontalLayout {
+        spacing: 0px;
+        Rectangle {
+            width: 24px;
+            height: 100%;
+            background: !root.enabled ? (root.dark ? #2a2f37 : #eef0f3) : minus.pressed ? (root.dark ? #3a4150 : #cbd3dd) : minus.has-hover ? (root.dark ? #333a45 : #dce2e9) : (root.dark ? #2c313a : #e9ebef);
+            border-radius: 4px;
+            minus := TouchArea {
+                width: 100%;
+                height: 100%;
+                enabled: root.enabled;
+                mouse-cursor: pointer;
+                clicked => { root.stepped(-0.1); }
+                Text {
+                    text: "−";
+                    color: root.enabled ? (root.dark ? #e6e8ec : #2c3136) : (root.dark ? #8f98a5 : #9aa1ab);
+                    font-size: 14px;
+                    width: 100%;
+                    height: 100%;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+        }
+        Rectangle {
+            horizontal-stretch: 1;
+            height: 100%;
+            background: root.dark ? #262d3a : #f2f4f7;
+            border-radius: 4px;
+            border-width: 1px;
+            border-color: root.dark ? #3a4250 : #c8ccd4;
+            TextInput {
+                width: 100%;
+                height: 100%;
+                text: root.text;
+                color: root.dark ? #cbd5e1 : #2c3136;
+                font-size: 12px;
+                horizontal-alignment: center;
+                vertical-alignment: center;
+                enabled: root.enabled;
+                edited() => { root.edited(self.text); }
+                accepted() => { root.accepted(self.text); }
+            }
+        }
+        Rectangle {
+            width: 24px;
+            height: 100%;
+            background: !root.enabled ? (root.dark ? #2a2f37 : #eef0f3) : plus.pressed ? (root.dark ? #3a4150 : #cbd3dd) : plus.has-hover ? (root.dark ? #333a45 : #dce2e9) : (root.dark ? #2c313a : #e9ebef);
+            border-radius: 4px;
+            plus := TouchArea {
+                width: 100%;
+                height: 100%;
+                enabled: root.enabled;
+                mouse-cursor: pointer;
+                clicked => { root.stepped(0.1); }
+                Text {
+                    text: "+";
+                    color: root.enabled ? (root.dark ? #e6e8ec : #2c3136) : (root.dark ? #8f98a5 : #9aa1ab);
+                    font-size: 14px;
+                    width: 100%;
+                    height: 100%;
+                    horizontal-alignment: center;
+                    vertical-alignment: center;
+                }
+            }
+        }
+    }
+}
+
+// 自定义按钮：内置 Tooltip 悬停提示（浅色标准气泡）
+component TooltipButton inherits Rectangle {
+    in property <string> text;
+    in property <string> hint;
+    in property <bool> enabled: true;
+    in property <bool> dark: false;
+    callback clicked;
+    min-width: 76px;
+    height: 30px;
+    border-radius: 4px;
+    background: !root.enabled ? (root.dark ? #2a2f37 : #eef0f3) : touch.pressed ? (root.dark ? #3a4150 : #cbd3dd) : touch.has-hover ? (root.dark ? #333a45 : #dce2e9) : (root.dark ? #2c313a : #e9ebef);
+    touch := TouchArea {
+        width: 100%;
+        height: 100%;
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        clicked => { root.clicked(); }
+    }
+    Text {
+        text: root.text;
+        width: 100%;
+        height: 100%;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        color: root.enabled ? (root.dark ? #e6e8ec : #2c3136) : (root.dark ? #8f98a5 : #9aa1ab);
+        font-size: 12px;
+    }
+    Tooltip {
+        VerticalLayout {
+            padding: 10px;
+            Text {
+                text: root.hint;
+                color: root.dark ? #e6e8ec : #2c3136;
+                font-size: 11px;
+            }
+        }
+    }
+}
+
+// 自定义开关按钮（连续播放），同样用内置 Tooltip
+component TooltipToggle inherits Rectangle {
+    in property <string> text;
+    in property <string> hint;
+    in-out property <bool> checked: false;
+    in property <bool> enabled: true;
+    in property <bool> dark: false;
+    callback toggled(bool);
+    min-width: 88px;
+    height: 30px;
+    border-radius: 4px;
+    background: !root.enabled ? (root.dark ? #2a2f37 : #eef0f3) : root.checked ? #1f6fd6 : (touch.pressed ? (root.dark ? #3a4150 : #ccd4de) : (touch.has-hover ? (root.dark ? #333a45 : #dce2e9) : (root.dark ? #2c313a : #e9ebef)));
+    touch := TouchArea {
+        width: 100%;
+        height: 100%;
+        enabled: root.enabled;
+        mouse-cursor: pointer;
+        clicked => { root.toggled(!root.checked); }
+    }
+    Text {
+        text: root.text;
+        width: 100%;
+        height: 100%;
+        horizontal-alignment: center;
+        vertical-alignment: center;
+        color: !root.enabled ? (root.dark ? #6a7280 : #9aa1ab) : root.checked ? #ffffff : (root.dark ? #e6e8ec : #2c3136);
+        font-size: 12px;
+    }
+    Tooltip {
+        VerticalLayout {
+            padding: 10px;
+            Text {
+                text: root.hint;
+                color: root.dark ? #e6e8ec : #2c3136;
+                font-size: 11px;
+            }
+        }
+    }
+}
+
+export struct RowData {
+    uidx: int,
+    kind: int,
+    gid: int,
+    sidx: int,
+    a0: float,
+    a1: float,
+    b0: float,
+    b1: float,
+    conf: float,
+    text: string,
+    checked: bool,
+    sel-a: bool,
+    sel-b: bool,
+    is-c: bool,
+    disp: int,
+    tab: int,
+    side: int,
+    a-ready: bool,
+    b-ready: bool,
+}
+
+export struct BandMark {
+    x0: float,
+    x1: float,
+    side: int,
+}
+
+export component AppWindow inherits Window {
+    // 从一开始就不显示系统标题栏（配合 slint_borderless_windows 只保留圆角/阴影/缩放）
+    no-frame: true;
+    in-out property <bool> can-play;
+    in-out property <bool> playing;
+    in-out property <bool> asr-done;
+    in-out property <bool> whole-loaded;
+    in-out property <float> speed: 1.0;
+    in-out property <float> speed-input: 1.0;
+    in-out property <string> speed-text: "1";
+    in-out property <bool> continuous: false;
+    in-out property <string> file-label;
+    in-out property <string> status;
+    in-out property <string> time-label;
+    in-out property <string> transcript;
+    in-out property <int> checked-count;
+    in-out property <int> split-mode: 1;
+    in-out property <string> text-font: "Times New Roman";
+    in-out property <length> text-size: 12px;
+    in-out property <bool> show-help: false;
+    in-out property <bool> dark-mode: false;
+    in-out property <bool> maximized: false;
+    property <int> menu-open: -1;
+    // hover 切换的延迟执行标记（普通元素面板方案：防抖用）
+    property <int> pending-switch: -1;
+    // 查看菜单的子菜单展开（0=ASR 内容分行, 1=字体, 2=字号, -1=无）
+    property <int> sub-open: -1;
+    callback sys-minimize();
+    callback sys-maximize();
+    callback sys-close();
+    callback titlebar-drag();
+    callback titlebar-double();
+    in-out property <[string]> sys-fonts: [];
+    in-out property <int> playing-gid: -1;
+    in-out property <int> playing-sid: -1;
+    in-out property <bool> ctrl-held: false;
+    in-out property <length> scroll-target-y: -1px;
+    in-out property <length> scroll-target-h: 0px;
+    // 递增序号：目标行变化（播放切句/点击进度条）都 +1，强制 changed 触发滚动
+    // （scroll-target-y 同值重复不会触发 changed；首次触发时布局可能未就绪导致
+    //   content-height 为 0、滚到顶部，后续 tick 序号递增会重新滚到正确位置）
+    in-out property <int> scroll-seq: 0;
+    in-out property <[float]> wave-peaks: [];
+    // 频谱控件当前宽度（px），供 Rust 按像素生成波形列
+    in-out property <length> wave-w: 0px;
+    callback wave-resized(float);
+    in-out property <float> progress: 0.0;
+    in-out property <float> threshold-db: -30.0;
+    in-out property <float> min-silence: 1.0;
+    in-out property <float> min-sound: 1.0;
+    in-out property <float> zone-tolerance: 2.0;
+    in property <[BandMark]> bands: [];
+    in-out property <[RowData]> rows: [];
+
+    // 目标行变化（播放切句/点击进度条/数字键切换）→ 居中滚动
+    changed scroll-seq => { root.scroll-to-target(); }
+
+    callback set-split-mode(int);
+    callback open-file();
+    callback about();
+    callback seek-time(int, int);
+    callback open-txt();
+    callback realign();
+    callback transcript-edited(text: string);
+    callback apply-params();
+    callback toggle-play();
+    callback export-checked();
+    callback toggle-checked(uidx: int);
+    callback play-sentence(uidx: int);
+    callback copy-text(gid: int, side: int);
+    callback copy-audio(gid: int, side: int);
+    callback export-group(gid: int, side: int);
+    callback set-tab(gid: int, tab: int);
+    callback select-side(gid: int, side: int);
+    callback bar-drag(ratio: float, phase: int);
+    callback bar-click(ratio: float);
+    callback bar-dbl(ratio: float);
+    callback wave-click(ratio: float);
+    callback speed-released(v: float);
+    callback speed-step(delta: float);
+    callback speed-input-edit(text: string);
+    callback speed-step-input(delta: float);
+    callback play-next-sentence();
+    callback play-prev-sentence();
+    callback play-next-text();
+    callback play-prev-text();
+    callback play-text-n(n: int);
+    callback copy-current-audio();
+    callback copy-current-text();
+    callback select-all-current();
+    callback invert-current();
+    callback export-current();
+    callback export-current-text();
+    callback select-none-current();
+    callback about-douyin();
+    callback reanalyze();
+    callback open-help();
+
+    // ===== 菜单状态管理（普通元素面板方案：面板是普通 Rectangle，非 PopupWindow，不拦截主窗口 hover） =====
+    public function toggle-menu(idx: int) {
+        if (root.menu-open == idx) {
+            root.close-menus();
+        } else {
+            root.menu-open = idx;
+            root.sub-open = -1;
+        }
+    }
+    public function hover-menu(idx: int) {
+        if (root.menu-open != -1 && root.menu-open != idx) {
+            root.pending-switch = idx;
+        }
+    }
+    public function close-menus() {
+        root.menu-open = -1;
+        root.sub-open = -1;
+        root.pending-switch = -1;
+    }
+
+    background: root.dark-mode ? #16181d : #f6f7f9;
+    preferred-width: 1100px;
+    preferred-height: 720px;
+    min-width: 860px;
+    min-height: 560px;
+
+    // ===== 外层布局：自定义标题栏（含菜单）+ 主体 =====
+    VerticalLayout {
+        spacing: 0px;
+
+        // ===== 自定义标题栏（无边框窗口，原生按钮由 slint-borderless 提供） =====
+        Rectangle {
+            height: 40px;
+            background: root.dark-mode ? #1e2232 : #eef0f3;
+            HorizontalLayout {
+                spacing: 20px;
+                padding-left: 14px;
+
+                title-ta := TouchArea {
+                    width: 76px;
+                    height: 100%;
+                    pointer-event(event) => {
+                        if (event.kind == PointerEventKind.down && event.button == PointerEventButton.left) {
+                            root.titlebar-drag();
+                        }
+                    }
+                    double-clicked => { root.titlebar-double(); }
+                    Text {
+                        text: "EchoDup";
+                        color: root.dark-mode ? #cbd5e1 : #3a4048;
+                        font-size: 13px;
+                        font-weight: 700;
+                        vertical-alignment: bottom;
+                        width: 76px;
+                        height: 100%;
+                    }
+                }
+
+                // 菜单按钮连成一体（原生菜单栏样式，按钮间无间隙）
+                menu-buttons := HorizontalLayout {
+                    spacing: 0px;
+
+                    // ---- 文件 ----
+                    mb-file := MyMenuBarItemBase {
+                        title: "文件";
+                        width: 50px;
+                        height: 40px;
+                        default-foreground: root.dark-mode ? #ffffff : #000000;
+                        hover-foreground: root.dark-mode ? #ffffff : #000000;
+                        pressed-foreground: root.dark-mode ? #ffffff : #000000;
+                        hover-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                        pressed-background: root.dark-mode ? #FFFFFF0A : #0000000F;
+                        font-weight: FontWeight.light;
+                        border-radius: 3px;
+                        clicked => { root.toggle-menu(0); }
+                        hovered => { root.hover-menu(0); }
+                    }
+
+                    // ---- 编辑 ----
+                    mb-edit := MyMenuBarItemBase {
+                        title: "编辑";
+                        width: 50px;
+                        height: 40px;
+                        default-foreground: root.dark-mode ? #ffffff : #000000;
+                        hover-foreground: root.dark-mode ? #ffffff : #000000;
+                        pressed-foreground: root.dark-mode ? #ffffff : #000000;
+                        hover-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                        pressed-background: root.dark-mode ? #FFFFFF0A : #0000000F;
+                        font-weight: FontWeight.light;
+                        border-radius: 3px;
+                        clicked => { root.toggle-menu(1); }
+                        hovered => { root.hover-menu(1); }
+                    }
+
+                    // ---- 查看 ----
+                    mb-view := MyMenuBarItemBase {
+                        title: "查看";
+                        width: 50px;
+                        height: 40px;
+                        default-foreground: root.dark-mode ? #ffffff : #000000;
+                        hover-foreground: root.dark-mode ? #ffffff : #000000;
+                        pressed-foreground: root.dark-mode ? #ffffff : #000000;
+                        hover-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                        pressed-background: root.dark-mode ? #FFFFFF0A : #0000000F;
+                        font-weight: FontWeight.light;
+                        border-radius: 3px;
+                        clicked => { root.toggle-menu(2); }
+                        hovered => { root.hover-menu(2); }
+                    }
+
+                    // ---- 帮助 ----
+                    mb-help := MyMenuBarItemBase {
+                        title: "帮助";
+                        width: 50px;
+                        height: 40px;
+                        default-foreground: root.dark-mode ? #ffffff : #000000;
+                        hover-foreground: root.dark-mode ? #ffffff : #000000;
+                        pressed-foreground: root.dark-mode ? #ffffff : #000000;
+                        hover-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                        pressed-background: root.dark-mode ? #FFFFFF0A : #0000000F;
+                        font-weight: FontWeight.light;
+                        border-radius: 3px;
+                        clicked => { root.toggle-menu(3); }
+                        hovered => { root.hover-menu(3); }
+                    }
+
+                    // ---- 关于 ----
+                    mb-about := MyMenuBarItemBase {
+                        title: "关于";
+                        width: 50px;
+                        height: 40px;
+                        default-foreground: root.dark-mode ? #ffffff : #000000;
+                        hover-foreground: root.dark-mode ? #ffffff : #000000;
+                        pressed-foreground: root.dark-mode ? #ffffff : #000000;
+                        hover-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                        pressed-background: root.dark-mode ? #FFFFFF0A : #0000000F;
+                        font-weight: FontWeight.light;
+                        border-radius: 3px;
+                        clicked => { root.toggle-menu(4); }
+                        hovered => { root.hover-menu(4); }
+                    }
+                }
+
+                                spring-ta := TouchArea {
+                    horizontal-stretch: 1;
+                    pointer-event(event) => {
+                        if (event.kind == PointerEventKind.down && event.button == PointerEventButton.left) {
+                            root.titlebar-drag();
+                        }
+                    }
+                    double-clicked => { root.titlebar-double(); }
+                }
+                Button {
+                    text: root.dark-mode ? "深色" : "浅色";
+                    width: 80px;
+                    height: 32px;
+                    cross-axis-self-alignment: center;
+                    clicked => {
+                        root.dark-mode = !root.dark-mode;
+                        // 官方机制：同步 std-widgets 全局调色板（菜单栏/滑条/复选框跟随主题）
+                        if (root.dark-mode) {
+                            Palette.color-scheme = ColorScheme.dark;
+                        } else {
+                            Palette.color-scheme = ColorScheme.light;
+                        }
+                    }
+                }
+
+                // ---- 系统按钮（原生 hit-test，视觉自绘） ----
+                HorizontalLayout {
+                    spacing: 0px;
+                    Rectangle {
+                    width: 46px;
+                    height: 40px;
+                    background: min-ta.has-hover ? (root.dark-mode ? #ffffff18 : #00000014) : transparent;
+                    min-ta := TouchArea {
+                        width: 100%;
+                        height: 100%;
+                        mouse-cursor: pointer;
+                        clicked => { root.sys-minimize(); }
+                        // 最小化图标：Segoe MDL2 Assets E921
+                        Text {
+                            text: "\u{E921}";
+                            font-family: "Segoe MDL2 Assets";
+                            font-size: 12px;
+                            color: min-ta.has-hover ? (root.dark-mode ? #ffffff : #171717) : (root.dark-mode ? #cbd5e1 : #3a4048);
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                            width: 100%;
+                            height: 100%;
+                        }
+                    }
+                }
+                Rectangle {
+                    width: 46px;
+                    height: 40px;
+                    background: max-ta.has-hover ? (root.dark-mode ? #ffffff18 : #00000014) : transparent;
+                    max-ta := TouchArea {
+                        width: 100%;
+                        height: 100%;
+                        mouse-cursor: pointer;
+                        clicked => { root.sys-maximize(); }
+                        // 最大化/复原图标：Segoe MDL2 Assets E922 / E923
+                        Text {
+                            text: root.maximized ? "\u{E923}" : "\u{E922}";
+                            font-family: "Segoe MDL2 Assets";
+                            font-size: 12px;
+                            color: max-ta.has-hover ? (root.dark-mode ? #ffffff : #171717) : (root.dark-mode ? #cbd5e1 : #3a4048);
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                            width: 100%;
+                            height: 100%;
+                        }
+                    }
+                }
+                Rectangle {
+                    width: 46px;
+                    height: 40px;
+                    background: close-ta.has-hover ? #c42b1c : transparent;
+                    close-ta := TouchArea {
+                        width: 100%;
+                        height: 100%;
+                        mouse-cursor: pointer;
+                        clicked => { root.sys-close(); }
+                        // 关闭图标：Segoe MDL2 Assets E8BB
+                        Text {
+                            text: "\u{E8BB}";
+                            font-family: "Segoe MDL2 Assets";
+                            font-size: 12px;
+                            color: close-ta.has-hover ? white : (root.dark-mode ? #cbd5e1 : #3a4048);
+                            horizontal-alignment: center;
+                            vertical-alignment: center;
+                            width: 100%;
+                            height: 100%;
+                        }
+                    }
+                }
+                }
+            }
+        }
+
+    VerticalLayout {
+        padding: 8px;
+        spacing: 6px;
+        vertical-stretch: 1;
+
+        // ===== 左列参数 + 中央区域 =====
+        HorizontalLayout {
+            spacing: 6px;
+            vertical-stretch: 1;
+            Rectangle {
+                width: 276px;
+                background: root.dark-mode ? #23262b : #ffffff;
+                border-radius: 6px;
+                VerticalLayout {
+                    padding: 10px;
+                    spacing: 8px;
+                    Text {
+                        text: "原文对齐";
+                        font-weight: 700;
+                        color: root.dark-mode ? #e6e8ec : #1f2328;
+                        font-size: 13px;
+                    }
+                    TextEdit {
+                        text: root.transcript;
+                        placeholder-text: "输入听力原文，按换行对应 ASR 结果…";
+                        vertical-stretch: 1;
+                        font-size: 12px;
+                        edited(text) => { root.transcript-edited(text); }
+                    }
+                    txt-btn := TooltipButton {
+                        dark: root.dark-mode;
+                        text: "打开文本";
+                        hint: "导入原文文本";
+                        clicked => { root.open-txt(); }
+                    }
+                    realign-btn := TooltipButton {
+                        dark: root.dark-mode;
+                        text: "重新对齐";
+                        hint: "按原文重新对齐";
+                        clicked => { root.realign(); }
+                    }
+                    Rectangle {
+                        height: 1px;
+                        background: root.dark-mode ? #3a4150 : #e3e6ea;
+                    }
+                    Text {
+                        text: "参数";
+                        font-weight: 700;
+                        color: root.dark-mode ? #e6e8ec : #1f2328;
+                        font-size: 13px;
+                    }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        Text {
+                            text: "阈值dB";
+                            width: 56px;
+                            font-size: 11px;
+                            color: root.dark-mode ? #9aa4b2 : #5a6070;
+                            vertical-alignment: center;
+                        }
+                        Slider {
+                            horizontal-stretch: 1;
+                            minimum: -60;
+                            maximum: -10;
+                            value: root.threshold-db;
+                            changed(v) => { root.threshold-db = v; }
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        Text {
+                            text: "最短静音";
+                            width: 56px;
+                            font-size: 11px;
+                            color: root.dark-mode ? #9aa4b2 : #5a6070;
+                            vertical-alignment: center;
+                        }
+                        Slider {
+                            horizontal-stretch: 1;
+                            minimum: 0.1;
+                            maximum: 5.0;
+                            value: root.min-silence;
+                            changed(v) => { root.min-silence = v; }
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        Text {
+                            text: "最短发声";
+                            width: 56px;
+                            font-size: 11px;
+                            color: root.dark-mode ? #9aa4b2 : #5a6070;
+                            vertical-alignment: center;
+                        }
+                        Slider {
+                            horizontal-stretch: 1;
+                            minimum: 0.1;
+                            maximum: 5.0;
+                            value: root.min-sound;
+                            changed(v) => { root.min-sound = v; }
+                        }
+                    }
+                    HorizontalLayout {
+                        spacing: 6px;
+                        Text {
+                            text: "区间容差";
+                            width: 56px;
+                            font-size: 11px;
+                            color: root.dark-mode ? #9aa4b2 : #5a6070;
+                            vertical-alignment: center;
+                        }
+                        Slider {
+                            horizontal-stretch: 1;
+                            minimum: 0.5;
+                            maximum: 10.0;
+                            value: root.zone-tolerance;
+                            changed(v) => { root.zone-tolerance = v; }
+                        }
+                    }
+                    apply-btn := TooltipButton {
+                        dark: root.dark-mode;
+                        text: "应用并重新分析";
+                        hint: "应用参数重新分析（Ctrl+R/F5）";
+                        clicked => { root.apply-params(); }
+                    }
+                }
+            }
+            Rectangle {
+                horizontal-stretch: 1;
+                background: root.dark-mode ? #23262b : #ffffff;
+                border-radius: 6px;
+                VerticalLayout {
+                    padding: 8px;
+                    spacing: 6px;
+
+                    // ===== 快捷键提示（已移至 帮助 > 快捷键说明） =====
+
+                    // ===== 识别结果列表 =====
+                    rows-scroll := ScrollView {
+                        vertical-stretch: 1;
+                        vertical-scrollbar-policy: ScrollBarPolicy.always-on;
+                        VerticalLayout {
+                            spacing: 2px;
+                            for row in root.rows: Rectangle {
+                                height: row.kind == 0 ? (row.is-c ? 28px : 32px) : 28px;
+                                background: row.kind == 0 ? (root.playing-gid == row.gid ? (root.dark-mode ? #2c4a75 : #cfe4ff) : (root.dark-mode ? #2a2f37 : #eef1f5)) : (row.kind == 2 ? (root.dark-mode ? #22262c : #f7f8fa) : (root.playing-gid == row.gid && root.playing-sid == row.sidx ? (root.dark-mode ? #2c4a75 : #d6e9ff) : (root.dark-mode ? #262a31 : #ffffff)));
+                                border-radius: 4px;
+                                // 组头行整行 TouchArea：Ctrl+点击 = 切换整组勾选（不播放）
+                                if row.kind == 0: TouchArea {
+                                    width: 100%;
+                                    height: 100%;
+                                    clicked => {
+                                        if (root.ctrl-held) { root.toggle-checked(row.uidx); }
+                                    }
+                                }
+                                // ===== 组头行内容 =====
+                                // AB 组：TabWidget(A/B) 切换显示对应段句子 + 状态 + 按钮
+                                if row.kind == 0 && !row.is-c: HorizontalLayout {
+                                    spacing: 6px;
+                                    padding-left: 8px;
+                                    padding-right: 8px;
+                                    Text {
+                                        text: "Text \{row.disp}";
+                                        font-weight: 700;
+                                        color: root.dark-mode ? #e6e8ec : #1f2328;
+                                        font-size: 13px;
+                                        vertical-alignment: center;
+                                        horizontal-alignment: left;
+                                    }
+                                    // 自定义 A/B tab：选中蓝/红，未选中灰
+                                    Rectangle {
+                                        width: 54px;
+                                        height: 22px;
+                                        border-radius: 4px;
+                                        cross-axis-self-alignment: center;
+                                        background: row.tab == 0 ? #7cc0ff : (root.dark-mode ? #2c313a : #e2e5ea);
+                                        TouchArea {
+                                            width: 100%;
+                                            height: 100%;
+                                            mouse-cursor: pointer;
+                                            clicked => { root.set-tab(row.gid, 0); }
+                                        }
+                                        Tooltip { text: @markdown("切换到 A 段"); }
+                                        Text {
+                                            text: "A";
+                                            color: row.tab == 0 ? (root.dark-mode ? #e6e8ec : #1f2328) : (root.dark-mode ? #9aa4b2 : #5a6070);
+                                            font-size: 11px;
+                                            horizontal-alignment: center;
+                                            vertical-alignment: center;
+                                        }
+                                    }
+                                    Rectangle {
+                                        width: 54px;
+                                        height: 22px;
+                                        border-radius: 4px;
+                                        cross-axis-self-alignment: center;
+                                        background: row.tab == 1 ? #ffa2a2 : (root.dark-mode ? #2c313a : #e2e5ea);
+                                        TouchArea {
+                                            width: 100%;
+                                            height: 100%;
+                                            mouse-cursor: pointer;
+                                            clicked => { root.set-tab(row.gid, 1); }
+                                        }
+                                        Tooltip { text: @markdown("切换到 B 段"); }
+                                        Text {
+                                            text: "B";
+                                            color: row.tab == 1 ? (root.dark-mode ? #e6e8ec : #1f2328) : (root.dark-mode ? #9aa4b2 : #5a6070);
+                                            font-size: 11px;
+                                            horizontal-alignment: center;
+                                            vertical-alignment: center;
+                                        }
+                                    }
+                                    Text {
+                                        text: row.tab == 1 ? (row.b-ready ? "B 就绪" : "B 转写中…") : (row.a-ready ? "A 就绪" : "A 转写中…");
+                                        color: row.tab == 1 ? (row.b-ready ? (root.dark-mode ? #4caf50 : #2f7d32) : (root.dark-mode ? #e0a03c : #b26a00)) : (row.a-ready ? (root.dark-mode ? #4caf50 : #2f7d32) : (root.dark-mode ? #e0a03c : #b26a00));
+                                        font-size: 11px;
+                                        vertical-alignment: center;
+                                    }
+                                    Rectangle {
+                                        cross-axis-self-alignment: center;
+                                        horizontal-stretch: 1;
+                                    }
+                                    Rectangle {
+                                        width: 54px;
+                                        height: 22px;
+                                        cross-axis-self-alignment: center;
+                                        background: root.dark-mode ? #2c313a : #e9ebef;
+                                        border-radius: 4px;
+                                        TouchArea {
+                                            width: 100%;
+                                            height: 100%;
+                                            mouse-cursor: pointer;
+                                            clicked => { root.copy-text(row.gid, row.tab); }
+                                        }
+                                        Tooltip { text: @markdown("复制当前段文本 (Ctrl+X)"); }
+                                        Text {
+                                            text: "复制文本";
+                                            color: root.dark-mode ? #d5d9e0 : #3a4048;
+                                            font-size: 11px;
+                                            vertical-alignment: center;
+                                            horizontal-alignment: center;
+                                        }
+                                    }
+                                    Rectangle {
+                                        width: 54px;
+                                        height: 22px;
+                                        cross-axis-self-alignment: center;
+                                        background: root.dark-mode ? #2c313a : #e9ebef;
+                                        border-radius: 4px;
+                                        TouchArea {
+                                            width: 100%;
+                                            height: 100%;
+                                            mouse-cursor: pointer;
+                                            clicked => { root.copy-audio(row.gid, row.tab); }
+                                        }
+                                        Tooltip { text: @markdown("复制当前段音频 (Ctrl+C)"); }
+                                        Text {
+                                            text: "复制音频";
+                                            color: root.dark-mode ? #d5d9e0 : #3a4048;
+                                            font-size: 11px;
+                                            vertical-alignment: center;
+                                            horizontal-alignment: center;
+                                        }
+                                    }
+                                    Rectangle {
+                                        width: 54px;
+                                        height: 22px;
+                                        cross-axis-self-alignment: center;
+                                        background: root.dark-mode ? #2c313a : #e9ebef;
+                                        border-radius: 4px;
+                                        TouchArea {
+                                            width: 100%;
+                                            height: 100%;
+                                            mouse-cursor: pointer;
+                                            clicked => { root.export-group(row.gid, row.tab); }
+                                        }
+                                        Tooltip { text: @markdown("导出当前段音频文件 (Ctrl+S)"); }
+                                        Text {
+                                            text: "导出";
+                                            color: root.dark-mode ? #d5d9e0 : #3a4048;
+                                            font-size: 11px;
+                                            vertical-alignment: center;
+                                            horizontal-alignment: center;
+                                        }
+                                    }
+                                }
+                                // C 段组头：无 Tab，按钮 side=0
+                                if row.kind == 0 && row.is-c: HorizontalLayout {
+                                    spacing: 6px;
+                                    padding-left: 8px;
+                                    padding-right: 8px;
+                                    Text {
+                                        text: "Text \{row.disp}";
+                                        font-weight: 700;
+                                        color: root.dark-mode ? #e6e8ec : #1f2328;
+                                        font-size: 13px;
+                                        vertical-alignment: center;
+                                        horizontal-alignment: left;
+                                    }
+                                    // 自定义 C 标签：紫色常驻
+                                    Rectangle {
+                                        width: 54px;
+                                        height: 22px;
+                                        border-radius: 4px;
+                                        cross-axis-self-alignment: center;
+                                        background: #8b5cf6;
+                                        Tooltip { text: @markdown("独立段 C"); }
+                                        Text {
+                                            text: "C";
+                                            color: white;
+                                            font-size: 11px;
+                                            horizontal-alignment: center;
+                                            vertical-alignment: center;
+                                        }
+                                    }
+                                    Rectangle {
+                                        cross-axis-self-alignment: center;
+                                        horizontal-stretch: 1;
+                                    }
+                                    Text {
+                                        text: "独立段";
+                                        color: root.dark-mode ? #9aa4b2 : #8a919d;
+                                        font-size: 11px;
+                                        vertical-alignment: center;
+                                    }
+                                    Rectangle {
+                                        width: 54px;
+                                        height: 22px;
+                                        cross-axis-self-alignment: center;
+                                        background: root.dark-mode ? #2c313a : #e9ebef;
+                                        border-radius: 4px;
+                                        TouchArea {
+                                            width: 100%;
+                                            height: 100%;
+                                            mouse-cursor: pointer;
+                                            clicked => { root.copy-text(row.gid, 0); }
+                                        }
+                                        Tooltip { text: @markdown("复制当前段文本 (Ctrl+X)"); }
+                                        Text {
+                                            text: "复制文本";
+                                            color: root.dark-mode ? #d5d9e0 : #3a4048;
+                                            font-size: 11px;
+                                            vertical-alignment: center;
+                                            horizontal-alignment: center;
+                                        }
+                                    }
+                                    Rectangle {
+                                        width: 54px;
+                                        height: 22px;
+                                        cross-axis-self-alignment: center;
+                                        background: root.dark-mode ? #2c313a : #e9ebef;
+                                        border-radius: 4px;
+                                        TouchArea {
+                                            width: 100%;
+                                            height: 100%;
+                                            mouse-cursor: pointer;
+                                            clicked => { root.copy-audio(row.gid, 0); }
+                                        }
+                                        Tooltip { text: @markdown("复制当前段音频 (Ctrl+C)"); }
+                                        Text {
+                                            text: "复制音频";
+                                            color: root.dark-mode ? #d5d9e0 : #3a4048;
+                                            font-size: 11px;
+                                            vertical-alignment: center;
+                                            horizontal-alignment: center;
+                                        }
+                                    }
+                                    Rectangle {
+                                        width: 54px;
+                                        height: 22px;
+                                        cross-axis-self-alignment: center;
+                                        background: root.dark-mode ? #2c313a : #e9ebef;
+                                        border-radius: 4px;
+                                        TouchArea {
+                                            width: 100%;
+                                            height: 100%;
+                                            mouse-cursor: pointer;
+                                            clicked => { root.export-group(row.gid, 0); }
+                                        }
+                                        Tooltip { text: @markdown("导出当前段音频文件 (Ctrl+S)"); }
+                                        Text {
+                                            text: "导出";
+                                            color: root.dark-mode ? #d5d9e0 : #3a4048;
+                                            font-size: 11px;
+                                            vertical-alignment: center;
+                                            horizontal-alignment: center;
+                                        }
+                                    }
+                                }
+                                // ===== 句子行 =====
+                                if row.kind == 1: HorizontalLayout {
+                                    spacing: 4px;
+                                    padding-left: 8px;
+                                    padding-right: 8px;
+                                    CheckBox {
+                                        cross-axis-self-alignment: center;
+                                        checked: row.checked;
+                                        toggled => { root.toggle-checked(row.uidx); }
+                                    }
+                                    HorizontalLayout {
+                                        spacing: 0px;
+                                        width: 92px;
+                                        seg-start := TouchArea {
+                                            width: 46px;
+                                            height: 100%;
+                                            mouse-cursor: pointer;
+                                            clicked => { root.seek-time(row.uidx, 0); }
+                                            Tooltip { text: @markdown("跳转到开始时间"); }
+                                            Text {
+                                                width: 100%;
+                                                height: 100%;
+                                                text: format_ts(row.a0);
+                                                color: root.dark-mode ? #d5d9e0 : #3a4048;
+                                                font-family: "Consolas";
+                                                font-size: 11px;
+                                                vertical-alignment: center;
+                                                horizontal-alignment: left;
+                                            }
+                                        }
+                                        seg-end := TouchArea {
+                                            width: 46px;
+                                            height: 100%;
+                                            mouse-cursor: pointer;
+                                            clicked => { root.seek-time(row.uidx, 1); }
+                                            Tooltip { text: @markdown("跳转到结束时间"); }
+                                            Text {
+                                                width: 100%;
+                                                height: 100%;
+                                                text: format_ts(row.a1);
+                                                color: root.dark-mode ? #d5d9e0 : #3a4048;
+                                                font-family: "Consolas";
+                                                font-size: 11px;
+                                                vertical-alignment: center;
+                                                horizontal-alignment: left;
+                                            }
+                                        }
+                                    }
+                                    Rectangle { width: 8px; }
+                                    TouchArea {
+                                        horizontal-stretch: 1;
+                                        height: 100%;
+                                        mouse-cursor: pointer;
+                                        clicked => {
+                                            if (root.ctrl-held) { root.toggle-checked(row.uidx); }
+                                            else { root.play-sentence(row.uidx); }
+                                        }
+                                        Text {
+                                            x: 0;
+                                            y: 0;
+                                            width: 100%;
+                                            height: 100%;
+                                            text: row.text;
+                                            color: row.checked ? (root.dark-mode ? #e6e8ec : #1f2328) : (root.dark-mode ? #9aa4b2 : #5a6070);
+                                            font-family: root.text-font;
+                                            font-size: root.text-size;
+                                            vertical-alignment: center;
+                                            horizontal-alignment: left;
+                                            wrap: word-wrap;
+                                        }
+                                    }
+                                }
+                                // ===== 转写中占位行 =====
+                                if row.kind == 2: HorizontalLayout {
+                                    spacing: 4px;
+                                    padding-left: 8px;
+                                    padding-right: 8px;
+                                    CheckBox {
+                                        cross-axis-self-alignment: center;
+                                        checked: row.checked;
+                                        toggled => { root.toggle-checked(row.uidx); }
+                                    }
+                                    HorizontalLayout {
+                                        spacing: 0px;
+                                        width: 92px;
+                                        Text {
+                                            width: 46px;
+                                            text: format_ts(row.a0);
+                                            color: root.dark-mode ? #9aa4b2 : #8a919d;
+                                            font-family: "Consolas";
+                                            font-size: 11px;
+                                            vertical-alignment: center;
+                                            horizontal-alignment: left;
+                                        }
+                                        Text {
+                                            width: 46px;
+                                            text: format_ts(row.a1);
+                                            color: root.dark-mode ? #9aa4b2 : #8a919d;
+                                            font-family: "Consolas";
+                                            font-size: 11px;
+                                            vertical-alignment: center;
+                                            horizontal-alignment: left;
+                                        }
+                                    }
+                                    Rectangle { width: 8px; }
+                                    TouchArea {
+                                        horizontal-stretch: 1;
+                                        height: 100%;
+                                        mouse-cursor: pointer;
+                                        clicked => {
+                                            if (root.ctrl-held) { root.toggle-checked(row.uidx); }
+                                            else { root.play-sentence(row.uidx); }
+                                        }
+                                        Text {
+                                            x: 0;
+                                            y: 0;
+                                            width: 100%;
+                                            height: 100%;
+                                            text: row.side == 1 ? "B 段转写中…" : "转写中…";
+                                            color: root.dark-mode ? #8f98a5 : #9aa1ab;
+                                            font-size: root.text-size;
+                                            vertical-alignment: center;
+                                            horizontal-alignment: left;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    // ===== 播放控制 =====
+                    HorizontalLayout {
+                        spacing: 8px;
+                        padding-left: 8px;
+                        padding-right: 8px;
+                        play-icon := TouchArea {
+                            width: 34px;
+                            height: 34px;
+                            cross-axis-self-alignment: center;
+                            enabled: root.can-play;
+                            mouse-cursor: pointer;
+                            clicked => { root.toggle-play(); }
+                            Tooltip { text: @markdown("播放/暂停（空格）"); }
+                            Image {
+                                width: 100%;
+                                height: 100%;
+                                source: root.playing ? @image-url("res/pause.svg") : @image-url("res/play.svg");
+                                image-fit: contain;
+                            }
+                        }
+                        cont-btn := TooltipToggle {
+                            dark: root.dark-mode;
+                            text: "连续播放";
+                            hint: "连续播放：读完自动续读";
+                            checked: root.continuous;
+                            enabled: root.can-play;
+                            toggled(v) => { root.continuous = v; }
+                        }
+                        speed-slider := Slider {
+                            minimum: 0.6;
+                            maximum: 2.0;
+                            step: 0.05;
+                            width: 140px;
+                            value: root.speed;
+                            enabled: root.can-play;
+                            changed(v) => { root.speed = v; }
+                            released => { root.speed-released(root.speed); }
+                        }
+                        speed-edit := SpeedSpinBox {
+                            text: root.speed-text;
+                            value: root.speed-input;
+                            enabled: root.can-play;
+                            dark: root.dark-mode;
+                            edited(t) => { root.speed-input-edit(t); }
+                            accepted(t) => { root.speed-input-edit(t); }
+                            stepped(d) => { root.speed-step-input(d); }
+                        }
+
+                        Rectangle {
+                            horizontal-stretch: 1;
+                        }
+                        Text {
+                            text: root.time-label;
+                            color: root.dark-mode ? #d5d9e0 : #3a4048;
+                            font-size: 12px;
+                            vertical-alignment: center;
+                        }
+                        export-chk-btn := TooltipButton {
+                            dark: root.dark-mode;
+                            text: "导出勾选";
+                            hint: "导出勾选句子";
+                            enabled: root.can-play && root.checked-count > 0;
+                            clicked => { root.export-checked(); }
+                        }
+                    }
+
+
+                }
+            }
+        }
+        // ===== 波形（Slint 原生绘制，颜色随主题） =====
+                    Rectangle {
+                        height: 60px;
+                        background: root.dark-mode ? #262a31 : #f1f3f6;
+                        border-radius: 4px;
+                        clip: true;
+                        changed width => { root.wave-w = self.width; root.wave-resized(self.width / 1px); }
+                        // A/B/C 段覆盖色带（半透明叠加，波形透出；边界即色带边缘）
+                        for band in root.bands: Rectangle {
+                            x: band.x0 * parent.width;
+                            y: 0px;
+                            width: max(2px, (band.x1 - band.x0) * parent.width);
+                            height: parent.height;
+                            background: band.side == 0 ? #7cc0ff : (band.side == 1 ? #ffa2a2 : #d4b8ff);
+                            opacity: 0.28;
+                        }
+                        // 波形柱（峰值数组，对称居中）
+                        for p[i] in root.wave-peaks: Rectangle {
+                            x: i * (parent.width / root.wave-peaks.length);
+                            width: max(1px, parent.width / root.wave-peaks.length);
+                            height: max(1px, p * parent.height * 0.88);
+                            y: (parent.height - self.height) / 2;
+                            background: root.dark-mode ? #9aa0a8 : #7d8494;
+                        }
+                        TouchArea {
+                            width: 100%;
+                            height: 100%;
+                            mouse-cursor: pointer;
+                            clicked => { root.wave-click(self.mouse-x / self.width); }
+                        }
+                    }
+
+                    // ===== 进度条 =====
+                    bar := Rectangle {
+                        height: 34px;
+                        background: root.dark-mode ? #262a31 : #f1f3f6;
+                        border-radius: 4px;
+                        // 识别色带（A 蓝 / B 红 / C 紫）
+                        for band in root.bands: Rectangle {
+                            x: band.x0 * bar.width;
+                            y: 3px;
+                            width: max(2px, (band.x1 - band.x0) * bar.width);
+                            height: bar.height - 6px;
+                            background: band.side == 0 ? #7cc0ff : (band.side == 1 ? #ffa2a2 : #d4b8ff);
+                            border-radius: 2px;
+                        }
+                        // 播放进度填充
+                        Rectangle {
+                            x: 0px;
+                            y: 0px;
+                            width: root.progress * bar.width;
+                            height: bar.height;
+                            background: #1f6fd6;
+                            opacity: 0.25;
+                        }
+                        bar-touch := TouchArea {
+                            width: 100%;
+                            height: 100%;
+                            mouse-cursor: pointer;
+                            // 只有按下/按住拖动才调进度；悬停移动不触发（moved 仅在按下时回调）
+                            pointer-event(e) => {
+                                if (e.kind == PointerEventKind.down) {
+                                    root.bar-drag(self.mouse-x / self.width, 0);
+                                } else if (e.kind == PointerEventKind.up) {
+                                    root.bar-drag(self.mouse-x / self.width, 2);
+                                }
+                            }
+                            moved => { root.bar-drag(self.mouse-x / self.width, 1); }
+                            double-clicked => { root.bar-dbl(self.mouse-x / self.width); }
+                        }
+                    }
+
+                    // ===== 底部状态行：文件名 | 状态 =====
+        Rectangle {
+            height: 24px;
+            background: root.dark-mode ? #23262b : #ffffff;
+            border-radius: 4px;
+            HorizontalLayout {
+                spacing: 10px;
+                padding-left: 10px;
+                padding-right: 10px;
+                Text {
+                    text: root.file-label;
+                    color: root.dark-mode ? #b0b6c0 : #4a5260;
+                    font-size: 11px;
+                    vertical-alignment: center;
+                    max-width: 320px;
+                    overflow: elide;
+                }
+                Rectangle {
+                    width: 1px;
+                    background: root.dark-mode ? #3a4150 : #e3e6ea;
+                }
+                Text {
+                    text: root.status;
+                    color: root.dark-mode ? #9aa4b2 : #6b7280;
+                    font-size: 11px;
+                    vertical-alignment: center;
+                    horizontal-stretch: 1;
+                    overflow: elide;
+                }
+            }
+        }
+    }
+    }
+
+    // ===== 快捷键说明已移至独立子窗口（HelpWindow） =====
+
+    // ===== 焦点与快捷键 =====
+    main-focus := FocusScope {
+        // 记录 Ctrl 是否按住（供 Ctrl+点击切换勾选判断）
+        capture-key-pressed(event) => {
+            root.ctrl-held = event.modifiers.control;
+            // Ctrl++（主键盘 = 键）在 Slint 键名中无法可靠匹配，按文本字符处理：
+            // Windows 下 Ctrl+Shift+= 上报文本为 "+"（或 "="），小键盘 Ctrl++ 同为 "+"
+            if (root.can-play && event.modifiers.control && (event.text == "+" || event.text == "=")) {
+                root.speed-step(0.1);
+                accept
+            }
+            reject
+        }
+        capture-key-released(event) => {
+            root.ctrl-held = event.modifiers.control;
+            reject
+        }
+        KeyBinding {
+            keys: @keys(Space);
+            enabled: root.can-play;
+            activated => { root.menu-open = -1; root.toggle-play(); }
+        }
+        KeyBinding {
+            keys: @keys(Control + HyphenMinus);
+            enabled: root.can-play;
+            activated => { root.menu-open = -1; root.speed-step(-0.1); }
+        }
+        // C 加速 / X 减速 / Z 恢复 1 倍速（无 Ctrl）
+        KeyBinding {
+            keys: @keys(C);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.speed-step(0.1); }
+        }
+        KeyBinding {
+            keys: @keys(X);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.speed-step(-0.1); }
+        }
+        KeyBinding {
+            keys: @keys(Z);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.speed-released(1.0); }
+        }
+        KeyBinding {
+            keys: @keys(Control + C);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.copy-current-audio(); }
+        }
+        KeyBinding {
+            keys: @keys(Control + X);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.copy-current-text(); }
+        }
+        KeyBinding {
+            keys: @keys(Control + A);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.select-all-current(); }
+        }
+        KeyBinding {
+            keys: @keys(Control + Shift + I);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.invert-current(); }
+        }
+        KeyBinding {
+            keys: @keys(UpArrow);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-prev-text(); }
+        }
+        KeyBinding {
+            keys: @keys(DownArrow);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-next-text(); }
+        }
+        KeyBinding {
+            keys: @keys(LeftArrow);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-prev-sentence(); }
+        }
+        KeyBinding {
+            keys: @keys(RightArrow);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-next-sentence(); }
+        }
+        KeyBinding {
+            keys: @keys(PageUp);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-prev-text(); }
+        }
+        KeyBinding {
+            keys: @keys(PageDown);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-next-text(); }
+        }
+        KeyBinding {
+            keys: @keys(Control + R);
+            activated => { root.menu-open = -1; root.reanalyze(); }
+        }
+        KeyBinding {
+            keys: @keys(F5);
+            activated => { root.menu-open = -1; root.reanalyze(); }
+        }
+        KeyBinding {
+            keys: @keys(Control + O);
+            activated => { root.menu-open = -1; root.open-file(); }
+        }
+        KeyBinding {
+            keys: @keys(Control + S);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.export-current(); }
+        }
+        KeyBinding {
+            keys: @keys(Control + Q);
+            activated => { root.menu-open = -1; root.about(); }
+        }
+        KeyBinding {
+            keys: @keys(Control + H);
+            activated => { root.menu-open = -1; root.open-help(); }
+        }
+        KeyBinding {
+            keys: @keys(Digit1);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-text-n(1); }
+        }
+        KeyBinding {
+            keys: @keys(Digit2);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-text-n(2); }
+        }
+        KeyBinding {
+            keys: @keys(Digit3);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-text-n(3); }
+        }
+        KeyBinding {
+            keys: @keys(Digit4);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-text-n(4); }
+        }
+        KeyBinding {
+            keys: @keys(Digit5);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-text-n(5); }
+        }
+        KeyBinding {
+            keys: @keys(Digit6);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-text-n(6); }
+        }
+        KeyBinding {
+            keys: @keys(Digit7);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-text-n(7); }
+        }
+        KeyBinding {
+            keys: @keys(Digit8);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-text-n(8); }
+        }
+        KeyBinding {
+            keys: @keys(Digit9);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-text-n(9); }
+        }
+        KeyBinding {
+            keys: @keys(Digit0);
+            enabled: root.can-play && !TextInputInterface.text-input-focused;
+            activated => { root.menu-open = -1; root.play-text-n(10); }
+        }
+    }
+
+    function scroll-to-target() {
+        // 目标行在视口中垂直居中；content-y 为正（向下偏移）
+        if (root.scroll-target-y < 0px) { return; }
+        let vh = rows-scroll.visible-height;
+        let ch = rows-scroll.content-height;
+        let want = root.scroll-target-y - vh / 2 + root.scroll-target-h / 2;
+        let maxY = max(0px, ch - vh);
+        // Slint 的 content-y：负值向下滚动（正值向上），这里取 -want 并钳制在 [-maxY, 0]
+        rows-scroll.content-y = clamp(-want, -maxY, 0px);
+    }
+    function format_ts(v: float) -> string {
+        // 分:秒（0.1s 精度；79.1 -> 1:19.1、600 -> 10:00）
+        let tenths = round(max(0, v) * 10);
+        let m = floor(tenths / 600);
+        let rem = tenths - m * 600;
+        let whole = floor(rem / 10);
+        let frac = rem - whole * 10;
+        let ss = whole < 10 ? "0\{whole}" : "\{whole}";
+        return frac > 0 ? "\{m}:\{ss}.\{frac}" : "\{m}:\{ss}";
+    }
+    function format_conf(v: float) -> string {
+        return "\{round(v * 100) / 100}";
+    }
+
+    // ===== 菜单切换定时器：hover 到其他按钮时防抖 50ms 再切换（面板是普通元素，无模态拦截） =====
+    Timer {
+        interval: 50ms;
+        running: root.pending-switch != -1;
+        triggered => {
+            if (root.menu-open != root.pending-switch) {
+                root.menu-open = root.pending-switch;
+                root.sub-open = -1;
+            }
+            root.pending-switch = -1;
+        }
+    }
+
+
+    // 菜单覆盖层：菜单打开时拦截主体区域点击以关闭菜单（原生菜单栏行为：点击空白处关闭）
+    Rectangle {
+        visible: root.menu-open != -1;
+        x: 0px;
+        y: 40px;
+        width: parent.width;
+        height: parent.height - 40px;
+        background: transparent;
+        menu-overlay-ta := TouchArea {
+            width: 100%;
+            height: 100%;
+            clicked => {
+                root.close-menus();
+            }
+        }
+    }
+    // ===== 菜单面板：条件渲染的普通元素（浮在主体之上，但不拦截主窗口 hover） =====
+    // 文件
+    if root.menu-open == 0: Rectangle {
+        x: mb-file.x + menu-buttons.x;
+        y: 40px;
+        width: menu-frame-file.preferred-width;
+        height: menu-frame-file.preferred-height;
+        background: root.dark-mode ? #23262b : #ffffff;
+        border-radius: 7px;
+        border-width: 1px;
+        border-color: root.dark-mode ? #00000040 : #00000012;
+        drop-shadow-blur: 12px;
+        drop-shadow-offset-y: 4px;
+        drop-shadow-color: #00000040;
+        menu-frame-file := MyMenuFrameBase {
+            margin: 1px;
+            layout-min-width: 300px;
+            MyMenuItemBase {
+                entry: { title: "打开 (Ctrl+O)", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 0;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.open-file(); }
+            }
+            MyMenuItemBase {
+                entry: { title: "", shortcut: "", enabled: true, checked: false, is-separator: true };
+                index: 1;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+            }
+            MyMenuItemBase {
+                entry: { title: "导出勾选句子", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 2;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.export-checked(); }
+            }
+            MyMenuItemBase {
+                entry: { title: "导出当前 Text 音频 (Ctrl+S)", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 3;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.export-current(); }
+            }
+            MyMenuItemBase {
+                entry: { title: "导出当前 Text 文本", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 4;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.export-current-text(); }
+            }
+        }
+    }
+
+    // 编辑
+    if root.menu-open == 1: Rectangle {
+        x: mb-edit.x + menu-buttons.x;
+        y: 40px;
+        width: menu-frame-edit.preferred-width;
+        height: menu-frame-edit.preferred-height;
+        background: root.dark-mode ? #23262b : #ffffff;
+        border-radius: 7px;
+        border-width: 1px;
+        border-color: root.dark-mode ? #00000040 : #00000012;
+        drop-shadow-blur: 12px;
+        drop-shadow-offset-y: 4px;
+        drop-shadow-color: #00000040;
+        menu-frame-edit := MyMenuFrameBase {
+            margin: 1px;
+            layout-min-width: 300px;
+            MyMenuItemBase {
+                entry: { title: "复制文本 (Ctrl+C)", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 0;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.copy-current-text(); }
+            }
+            MyMenuItemBase {
+                entry: { title: "复制音频 (Ctrl+X)", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 1;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.copy-current-audio(); }
+            }
+            MyMenuItemBase {
+                entry: { title: "", shortcut: "", enabled: true, checked: false, is-separator: true };
+                index: 2;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+            }
+            MyMenuItemBase {
+                entry: { title: "全选 (Ctrl+A)", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 3;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.select-all-current(); }
+            }
+            MyMenuItemBase {
+                entry: { title: "取消全选", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 4;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.select-none-current(); }
+            }
+            MyMenuItemBase {
+                entry: { title: "反选 (Ctrl+Shift+I)", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 5;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.invert-current(); }
+            }
+        }
+    }
+
+    // 查看（一级：三个子菜单入口）
+    if root.menu-open == 2: Rectangle {
+        x: mb-view.x + menu-buttons.x;
+        y: 40px;
+        width: 150px;
+        height: menu-frame-view.preferred-height;
+        background: root.dark-mode ? #23262b : #ffffff;
+        border-radius: 7px;
+        border-width: 1px;
+        border-color: root.dark-mode ? #00000040 : #00000012;
+        drop-shadow-blur: 12px;
+        drop-shadow-offset-y: 4px;
+        drop-shadow-color: #00000040;
+        menu-frame-view := MyMenuFrameBase {
+            margin: 1px;
+            layout-min-width: 180px;
+            MyMenuItemBase {
+                entry: { title: "ASR 内容分行", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 0;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.sub-open = 0; }
+            }
+            MyMenuItemBase {
+                entry: { title: "字体", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 1;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.sub-open = 1; }
+            }
+            MyMenuItemBase {
+                entry: { title: "字号", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 2;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.sub-open = 2; }
+            }
+        }
+    }
+
+    // 查看二级：ASR 内容分行
+    if root.menu-open == 2 && root.sub-open == 0: Rectangle {
+        x: mb-view.x + menu-buttons.x + 150px;
+        y: 41px;
+        width: menu-frame-asr.preferred-width;
+        height: menu-frame-asr.preferred-height;
+        background: root.dark-mode ? #23262b : #ffffff;
+        border-radius: 7px;
+        border-width: 1px;
+        border-color: root.dark-mode ? #00000040 : #00000012;
+        drop-shadow-blur: 12px;
+        drop-shadow-offset-y: 4px;
+        drop-shadow-color: #00000040;
+        menu-frame-asr := MyMenuFrameBase {
+            margin: 1px;
+            layout-min-width: 300px;
+            MyMenuItemBase {
+                entry: { title: "按句号分行", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 0;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.set-split-mode(0); }
+            }
+            MyMenuItemBase {
+                entry: { title: "按换行分行", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 1;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.set-split-mode(1); }
+            }
+            MyMenuItemBase {
+                entry: { title: "按原文 M:/W: 分行", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 2;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.set-split-mode(2); }
+            }
+        }
+    }
+
+    // 查看二级：字体
+    if root.menu-open == 2 && root.sub-open == 1: Rectangle {
+        x: mb-view.x + menu-buttons.x + 150px;
+        y: 41px + 26px;
+        width: menu-frame-fonts.preferred-width;
+        height: min(420px, menu-frame-fonts.preferred-height);
+        background: root.dark-mode ? #23262b : #ffffff;
+        border-radius: 7px;
+        border-width: 1px;
+        border-color: root.dark-mode ? #00000040 : #00000012;
+        drop-shadow-blur: 12px;
+        drop-shadow-offset-y: 4px;
+        drop-shadow-color: #00000040;
+        ScrollView {
+            width: 100%;
+            height: 100%;
+            menu-frame-fonts := MyMenuFrameBase {
+            margin: 1px;
+            layout-min-width: 300px;
+            MyMenuItemBase {
+                entry: { title: "Times New Roman", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 0;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.text-font = "Times New Roman"; }
+            }
+            MyMenuItemBase {
+                entry: { title: "宋体", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 1;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.text-font = "SimSun"; }
+            }
+            MyMenuItemBase {
+                entry: { title: "微软雅黑", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 2;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.text-font = "Microsoft YaHei"; }
+            }
+            MyMenuItemBase {
+                entry: { title: "等宽", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 3;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.text-font = "monospace"; }
+            }
+            MyMenuItemBase {
+                entry: { title: "", shortcut: "", enabled: true, checked: false, is-separator: true };
+                index: 4;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+            }
+            for f in root.sys-fonts: MyMenuItemBase {
+                entry: { title: f, shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 5;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.text-font = f; }
+            }
+        }
+        }
+    }
+
+    // 查看二级：字号
+    if root.menu-open == 2 && root.sub-open == 2: Rectangle {
+        x: mb-view.x + menu-buttons.x + 150px;
+        y: 41px + 52px;
+        width: menu-frame-size.preferred-width;
+        height: menu-frame-size.preferred-height;
+        background: root.dark-mode ? #23262b : #ffffff;
+        border-radius: 7px;
+        border-width: 1px;
+        border-color: root.dark-mode ? #00000040 : #00000012;
+        drop-shadow-blur: 12px;
+        drop-shadow-offset-y: 4px;
+        drop-shadow-color: #00000040;
+        menu-frame-size := MyMenuFrameBase {
+            margin: 1px;
+            layout-min-width: 300px;
+            for sz in [10, 11, 12, 13, 14, 15, 16, 18, 20, 24, 28, 36]: MyMenuItemBase {
+                entry: { title: sz + "px", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 0;
+                font-size: 13px;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.text-size = sz * 1px; }
+            }
+        }
+    }
+
+    // 帮助
+    if root.menu-open == 3: Rectangle {
+        x: mb-help.x + menu-buttons.x;
+        y: 40px;
+        width: menu-frame-help.preferred-width;
+        height: menu-frame-help.preferred-height;
+        background: root.dark-mode ? #23262b : #ffffff;
+        border-radius: 7px;
+        border-width: 1px;
+        border-color: root.dark-mode ? #00000040 : #00000012;
+        drop-shadow-blur: 12px;
+        drop-shadow-offset-y: 4px;
+        drop-shadow-color: #00000040;
+        menu-frame-help := MyMenuFrameBase {
+            margin: 1px;
+            layout-min-width: 300px;
+            MyMenuItemBase {
+                entry: { title: "快捷键说明 (Ctrl+H)", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 0;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.open-help(); }
+            }
+        }
+    }
+
+    // 关于
+    if root.menu-open == 4: Rectangle {
+        x: mb-about.x + menu-buttons.x;
+        y: 40px;
+        width: menu-frame-about.preferred-width;
+        height: menu-frame-about.preferred-height;
+        background: root.dark-mode ? #23262b : #ffffff;
+        border-radius: 7px;
+        border-width: 1px;
+        border-color: root.dark-mode ? #00000040 : #00000012;
+        drop-shadow-blur: 12px;
+        drop-shadow-offset-y: 4px;
+        drop-shadow-color: #00000040;
+        menu-frame-about := MyMenuFrameBase {
+            margin: 1px;
+            layout-min-width: 300px;
+            MyMenuItemBase {
+                entry: { title: "哔哩哔哩 (Ctrl+Q)", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 0;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.about(); }
+            }
+            MyMenuItemBase {
+                entry: { title: "抖音", shortcut: "", enabled: true, checked: false, is-separator: false };
+                index: 1;
+                default-foreground: root.dark-mode ? #ffffff : #000000;
+                current-foreground: root.dark-mode ? #ffffff : #000000;
+                current-background: root.dark-mode ? #FFFFFF0F : #0000000A;
+                separator-color: root.dark-mode ? #ffffff18 : #00000014;
+                activate => { root.close-menus(); root.about-douyin(); }
+            }
+        }
+    }
+
+}
+// ============================================================
+// 快捷键说明子窗口：独立窗口，非模态，出现时主窗口仍可操作
+// ============================================================
+export component HelpWindow inherits Window {
+    title: "快捷键说明";
+    preferred-width: 430px;
+    preferred-height: 620px;
+
+    background: Palette.color-scheme == ColorScheme.dark ? #1f2227 : #f6f7f9;
+
+    VerticalLayout {
+        padding: 16px;
+        spacing: 4px;
+
+        Text {
+            text: "快捷键说明";
+            font-weight: 700;
+            font-size: 16px;
+            color: Palette.color-scheme == ColorScheme.dark ? #e6e8ec : #1f2328;
+        }
+        Rectangle {
+            height: 1px;
+            background: Palette.color-scheme == ColorScheme.dark ? #33373f : #e3e6ea;
+        }
+        Text { text: "空格  播放 / 暂停"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "↑ / ↓  切换上一个 / 下一个 Text"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "← / →（PgUp / PgDn）  切换上一句 / 下一句"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "1-9 / 0  播放第 1-10 个 Text"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "C / X  加速 / 减速 0.1"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "Z  恢复 1 倍速"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "Ctrl + ±  倍速步进 0.1"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "Ctrl + O  打开文件"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "Ctrl + S  导出当前 Text 音频"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "Ctrl + C  复制当前句音频"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "Ctrl + X  复制当前句文本"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "Ctrl + A  全选当前 Text"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "Ctrl + Shift + I  反选当前 Text"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "Ctrl + R / F5  按当前参数重新分析对齐"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "Ctrl + Q  关于（哔哩哔哩）"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: "Ctrl + H  本快捷键说明"; color: Palette.color-scheme == ColorScheme.dark ? #c3c9d2 : #333333; font-size: 12px; }
+        Text { text: ""; font-size: 4px; }
+        Button {
+            text: "关闭";
+            clicked => { root.close(); }
+        }
+    }
+}

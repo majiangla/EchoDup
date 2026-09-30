@@ -1,0 +1,32 @@
+# 构建产物
+/target/
+/EchoDupWinUI/
+/bench_out/
+/fingerprints/
+/result/
+/backups/
+
+# 数据与素材（体积大、非源码）
+/models/
+/sample/
+/%TEMP%/
+/.cargo/
+*.mp3
+*.wav
+
+# 开发过程临时文件
+*.bak
+*.py
+*.ps1
+*.cmd
+*.txt
+*.log
+*.png
+*.exe
+*.csv
+*.json
+*.db
+/pch_probe.cpp
+/probe2.cpp
+/probe_viz.html
+startup_log.txt
