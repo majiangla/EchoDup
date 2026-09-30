@@ -1,0 +1,12 @@
+<Page
+    x:Class="EchoDup.ScanPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">
+
+    <Grid>
+        <StackPanel Spacing="12">
+            <Button Content="Add Audio Files" />
+            <Button Content="Start Scan" />
+            <ListView />
+        </StackPanel>
+    </Grid>
+</Page>
